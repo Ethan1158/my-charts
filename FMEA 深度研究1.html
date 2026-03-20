@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMEA到HFMEA：风险管理的演化与深度解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Styles for Interactive Elements & Chart Containers */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .smooth-transition { transition: all 0.3s ease-in-out; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .timeline-item.active { border-left-color: #0284C7; background-color: #F0F9FF; }
+        .timeline-item:hover { background-color: #F8FAFC; cursor: pointer; }
+        .matrix-cell { transition: transform 0.1s, box-shadow 0.1s; cursor: pointer; }
+        .matrix-cell:hover { transform: scale(1.05); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; }
+        
+        /* Required Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+            min-height: 300px;
+        }
+
+        /* Hide scrollbar for clean look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-accent { background: #cbd5e1; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7', // Industrial/FMEA Blue
+                            900: '#0c4a6e',
+                        },
+                        health: {
+                            50: '#ecfdf5',
+                            500: '#10b981',
+                            600: '#059669', // Healthcare/HFMEA Green
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white pb-20">
+
+    <!-- Chosen Palette: Clinical Calm & Aerospace Heritage (Slate 50 background, Slate 800 text, Sky Blue 600 for FMEA origins, Emerald Green 600 for Healthcare/HFMEA evolution). -->
+    <!-- Application Structure Plan: The SPA is structured chronologically and conceptually. 1. Introduction sets the stage. 2. "Origins" uses an interactive timeline to explore FMEA's industrial history and a classic aerospace case. 3. "The Pivot" explains the conceptual shift needed for healthcare. 4. "HFMEA Evolution" introduces the core difference (Hazard Matrix replacing RPN) via an interactive, clickable matrix tool. 5. "HFMEA Case Study" uses an interactive process flow for an IV medication scenario to show practical application. 6. "Conclusion" summarizes with a comparative table. This guides the user from understanding industrial origins to mastering healthcare-specific adaptations. -->
+    <!-- Visualization & Content Choices: 
+         - Timeline (HTML/JS): Goal: Show historical progression. Method: Clickable list updating a detail pane. Justification: Better than static text for temporal data.
+         - Bar Chart (Chart.js): Goal: Illustrate RPN calculation. Method: Stacked/Grouped bar showing Severity, Occurrence, Detection. Justification: Visually breaks down the components of RPN.
+         - Hazard Scoring Matrix (HTML Grid/JS): Goal: Teach HFMEA core tool. Method: 4x4 interactive CSS Grid. Justification: Simulates the actual tool healthcare workers use, active learning. NO SVG.
+         - Process Flow (HTML Flexbox): Goal: Show HFMEA step-by-step case. Method: Expandable cards. Justification: Breaks down complex clinical processes into digestible steps. NO Mermaid JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center font-bold text-xl tracking-tight text-slate-800">
+                    <span class="text-brand-600 mr-1">&#9881;</span> FMEA <span class="mx-2 text-slate-400">&rarr;</span> <span class="text-health-600 mr-1">&#10010;</span> HFMEA
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#origin" class="text-slate-600 hover:text-brand-600 font-medium text-sm transition-colors">FMEA起源</a>
+                    <a href="#fmea-core" class="text-slate-600 hover:text-brand-600 font-medium text-sm transition-colors">核心概念与案例</a>
+                    <a href="#evolution" class="text-slate-600 hover:text-health-600 font-medium text-sm transition-colors">向医疗演化</a>
+                    <a href="#hfmea-matrix" class="text-slate-600 hover:text-health-600 font-medium text-sm transition-colors">HFMEA矩阵</a>
+                    <a href="#hfmea-case" class="text-slate-600 hover:text-health-600 font-medium text-sm transition-colors">临床案例</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="pt-32 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+        <div class="inline-block mb-4 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-sm font-semibold border border-slate-200 shadow-sm">
+            深度研究报告：系统可靠性与患者安全
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
+            从工业齿轮到生命防线：<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-health-600">FMEA 到 HFMEA 的深度演化</span>
+        </h1>
+        <p class="max-w-3xl mx-auto text-lg text-slate-600 mb-8 leading-relaxed">
+            失效模式与效应分析 (FMEA) 诞生于军事和航空航天领域，旨在防止机械故障。当这一强大的前瞻性风险管理工具跨界进入医疗保健领域时，它演变为了医疗失效模式与效应分析 (HFMEA)。本应用将带您沉浸式探索这一演化路径、核心差异及经典案例。
+        </p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
+
+        <!-- Section 1: Origins -->
+        <section id="origin" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 border-l-4 border-brand-600 pl-4">第一部分：FMEA的起源与工业印记</h2>
+                <p class="mt-4 text-slate-600 leading-relaxed">
+                    本节追溯FMEA的早期发展史。了解它如何从美国军方的标准，发展为NASA登月计划的保障，再到汽车工业的质量基石。点击左侧时间轴，探索不同时期的关键里程碑。
+                </p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <!-- Timeline Navigation -->
+                <div class="w-full md:w-1/3 bg-slate-50 border-r border-slate-200">
+                    <div id="timeline-1949" class="timeline-item active p-6 border-l-4 border-brand-600 smooth-transition" onclick="updateTimeline('1949')">
+                        <div class="text-sm font-bold text-brand-600 mb-1">1949年</div>
+                        <h3 class="font-semibold text-slate-800">MIL-P-1629 诞生</h3>
+                        <p class="text-xs text-slate-500 mt-1">美国军方首次提出概念</p>
+                    </div>
+                    <div id="timeline-1960" class="timeline-item p-6 border-l-4 border-transparent smooth-transition" onclick="updateTimeline('1960')">
+                        <div class="text-sm font-bold text-brand-600 mb-1">1960s年代</div>
+                        <h3 class="font-semibold text-slate-800">NASA 阿波罗计划</h3>
+                        <p class="text-xs text-slate-500 mt-1">航天领域的全面应用</p>
+                    </div>
+                    <div id="timeline-1970" class="timeline-item p-6 border-l-4 border-transparent smooth-transition" onclick="updateTimeline('1970')">
+                        <div class="text-sm font-bold text-brand-600 mb-1">1970s年代末</div>
+                        <h3 class="font-semibold text-slate-800">福特汽车引入</h3>
+                        <p class="text-xs text-slate-500 mt-1">汽车工业的大规模普及</p>
+                    </div>
+                </div>
+                <!-- Timeline Content -->
+                <div class="w-full md:w-2/3 p-8">
+                    <div id="content-1949" class="block">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 text-2xl mb-4 font-bold">&#9876;</div>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">军事起源：系统化预防的开端</h4>
+                        <p class="text-slate-600 mb-4 leading-relaxed">
+                            1949年11月9日，美国军方发布了第一个FMEA相关的军事标准：<strong>MIL-P-1629 "Procedures for Performing a Failure Mode, Effects and Criticality Analysis"</strong>。
+                        </p>
+                        <p class="text-slate-600 leading-relaxed">
+                            在当时，武器系统的复杂性急剧增加，传统的“事后维修”成本过高且致命。军方需要一种前瞻性的方法，在设计阶段就能预测组件失效可能导致的影响。这是人类历史上首次系统性地将“可能发生的错误”作为工程设计的核心考量。
+                        </p>
+                    </div>
+                    <div id="content-1960" class="hidden">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 text-2xl mb-4 font-bold">&#128640;</div>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">星辰大海：阿波罗计划的质量保障</h4>
+                        <p class="text-slate-600 mb-4 leading-relaxed">
+                            20世纪60年代，NASA在阿波罗（Apollo）登月计划中全面采用了FMEA。航天器包含数百万个零件，任何一个微小的失效都可能导致宇航员丧生和任务失败。
+                        </p>
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+                            <h5 class="font-bold text-amber-800 mb-2">经典案例预演：O型密封圈</h5>
+                            <p class="text-sm text-amber-700">NASA的工程师利用FMEA分析了火箭助推器上的O型密封圈。虽然当时成功登月，但这一分析方法揭示了低温下密封圈弹性下降的潜在失效模式（这一模式后来在1986年挑战者号悲剧中不幸成为现实，证明了早期FMEA分析的准确性）。</p>
+                        </div>
+                    </div>
+                    <div id="content-1970" class="hidden">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-100 text-brand-600 text-2xl mb-4 font-bold">&#128663;</div>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">汽车工业：走入民用与标准化</h4>
+                        <p class="text-slate-600 mb-4 leading-relaxed">
+                            受平托（Pinto）车型油箱设计缺陷导致的严重公关和法律危机影响，福特汽车公司（Ford）在1977年成为首家全面引入FMEA的汽车制造商。
+                        </p>
+                        <p class="text-slate-600 leading-relaxed">
+                            随后，三大汽车公司（福特、通用、克莱斯勒）联合制定了QS-9000标准，将FMEA确立为汽车供应链的强制要求。这标志着FMEA从高精尖的军工航天走向了大规模的民用制造业。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Traditional FMEA Core -->
+        <section id="fmea-core" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 border-l-4 border-brand-600 pl-4">第二部分：传统FMEA的核心与工业案例</h2>
+                <p class="mt-4 text-slate-600 leading-relaxed">
+                    传统FMEA的核心量化工具是<strong>风险优先数 (RPN, Risk Priority Number)</strong>。本节将展示工业界如何通过三个维度（严重度、发生频度、探测度）来量化和对比风险。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- RPN Explanation -->
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-slate-800 text-white flex justify-center items-center text-sm mr-3">&#8721;</span>
+                        RPN 评分模型
+                    </h3>
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="text-center p-3 border-2 border-red-100 bg-red-50 rounded-lg w-1/4">
+                            <div class="font-bold text-red-600 text-xl">S</div>
+                            <div class="text-xs text-red-800 mt-1">Severity<br>严重度 (1-10)</div>
+                        </div>
+                        <div class="mx-2 text-slate-400 font-bold">&times;</div>
+                        <div class="text-center p-3 border-2 border-amber-100 bg-amber-50 rounded-lg w-1/4">
+                            <div class="font-bold text-amber-600 text-xl">O</div>
+                            <div class="text-xs text-amber-800 mt-1">Occurrence<br>频度 (1-10)</div>
+                        </div>
+                        <div class="mx-2 text-slate-400 font-bold">&times;</div>
+                        <div class="text-center p-3 border-2 border-blue-100 bg-blue-50 rounded-lg w-1/4">
+                            <div class="font-bold text-blue-600 text-xl">D</div>
+                            <div class="text-xs text-blue-800 mt-1">Detection<br>探测度 (1-10)</div>
+                        </div>
+                        <div class="mx-2 text-slate-400 font-bold">=</div>
+                        <div class="text-center p-3 border-2 border-slate-800 bg-slate-800 rounded-lg w-1/4 text-white">
+                            <div class="font-bold text-xl">RPN</div>
+                            <div class="text-xs mt-1">优先数<br>(1-1000)</div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">工业案例：汽车刹车系统泵阀制造</h4>
+                    <ul class="space-y-3 text-sm text-slate-600 mt-4">
+                        <li class="flex items-start">
+                            <span class="text-brand-600 font-bold mr-2">&#9658;</span>
+                            <div><strong>失效模式：</strong> 泵阀内壁存在微小沙眼。</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 font-bold mr-2">&#9658;</span>
+                            <div><strong>严重度 (S)=9：</strong> 极高。可能导致刹车液泄漏，刹车失灵，引发致命车祸。</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-amber-500 font-bold mr-2">&#9658;</span>
+                            <div><strong>频度 (O)=2：</strong> 较低。现代铸造工艺成熟，出现沙眼概率低。</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 font-bold mr-2">&#9658;</span>
+                            <div><strong>探测度 (D)=3：</strong> 较高（分数低代表容易探测）。出厂前100%经过高压气密性测试，很容易被拦截。</div>
+                        </li>
+                        <li class="p-3 bg-slate-50 border border-slate-200 rounded text-slate-800 mt-2">
+                            <strong>RPN = 9 &times; 2 &times; 3 = 54</strong>。 分数不高，由于探测手段有效，工厂接受当前控制措施。
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Interactive Chart -->
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">不同失效模式的 RPN 对比</h3>
+                    <p class="text-xs text-slate-500 mb-6">工业界通过对比RPN值来决定优先投入资源解决哪个问题。</p>
+                    <div class="chart-container flex-grow flex items-center justify-center">
+                        <canvas id="rpnChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: The Pivot -->
+        <section id="evolution" class="scroll-mt-24">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 md:p-12 text-white shadow-lg relative overflow-hidden">
+                <!-- Decorative element -->
+                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-5"></div>
+                
+                <h2 class="text-3xl font-bold mb-6 text-health-500">关键转折：医疗保健为什么需要改变？</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div>
+                        <p class="text-slate-300 leading-relaxed mb-6">
+                            2001年，美国退伍军人事务部国家患者安全中心 (VA NCPS) 和联合委员会 (JCAHO) 试图将FMEA引入医院系统，以减少医疗差错。但他们很快发现了传统FMEA在医疗环境中的水土不服。
+                        </p>
+                        <div class="space-y-4">
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <h4 class="font-bold text-white mb-1">痛点 1：RPN 评分的欺骗性</h4>
+                                <p class="text-sm text-slate-400">S=9, O=2, D=2 (RPN=36) 的潜在致死风险，竟然和 S=2, O=6, D=3 (RPN=36) 的轻微擦伤风险得分一样。在工业上可以通过成本衡量，但在医疗中，<strong class="text-red-400">生命损害(Severity)具有绝对否决权</strong>。</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+                                <h4 class="font-bold text-white mb-1">痛点 2：“探测度”在医疗中的无力</h4>
+                                <p class="text-sm text-slate-400">在汽车流水线上，机器可以100%检测出不合格零件（D值很低）。但在临床路径中，给错药往往在患者出现不良反应后才被“探测”到，此时伤害已经造成。依靠“人”去探测风险是极其不可靠的。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center items-center">
+                        <div class="text-center mb-4">
+                            <div class="text-6xl text-slate-600 font-black mb-2">&#10006;</div>
+                            <div class="text-xl font-bold">抛弃 RPN</div>
+                        </div>
+                        <div class="text-center my-2 text-slate-500 text-2xl">&#8595;</div>
+                        <div class="text-center mt-4">
+                            <div class="text-6xl text-health-500 font-black mb-2">&#10004;</div>
+                            <div class="text-xl font-bold text-health-500">引入危害评分矩阵</div>
+                            <p class="text-sm text-slate-400 mt-2">（仅评估 严重度 与 发生频度）</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: HFMEA Matrix -->
+        <section id="hfmea-matrix" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 border-l-4 border-health-600 pl-4">第三部分：HFMEA的核心创举 - 危害评分矩阵</h2>
+                <p class="mt-4 text-slate-600 leading-relaxed">
+                    HFMEA 放弃了 RPN，采用了美国退伍军人事务部设计的<strong class="text-slate-800">危害评分矩阵 (Hazard Scoring Matrix)</strong>。它结合了严重度（4级）和概率（4级）。<br>
+                    <span class="text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block mt-2">&#128070; 互动演示：点击下方矩阵中的方块，查看该风险级别代表的行动指示。</span>
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                <!-- Matrix Grid -->
+                <div class="w-full lg:w-3/5 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <div class="min-w-[500px]">
+                        <!-- Grid Header -->
+                        <div class="grid grid-cols-5 gap-2 mb-2 text-center text-sm font-bold text-slate-600">
+                            <div class="flex items-center justify-center text-xs text-slate-400">严重度 \ 频度</div>
+                            <div>频繁<br><span class="text-xs font-normal">经常发生</span></div>
+                            <div>偶尔<br><span class="text-xs font-normal">可能发生几次</span></div>
+                            <div>罕见<br><span class="text-xs font-normal">可能发生一次</span></div>
+                            <div>极少<br><span class="text-xs font-normal">极不可能</span></div>
+                        </div>
+                        
+                        <!-- Row 1: Catastrophic -->
+                        <div class="grid grid-cols-5 gap-2 mb-2 h-16">
+                            <div class="flex items-center justify-end pr-4 font-bold text-slate-700 text-sm">灾难性<br><span class="text-xs font-normal text-slate-500 ml-2">致死/永久伤害</span></div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '16', '灾难性', '频繁')">16</div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '12', '灾难性', '偶尔')">12</div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '8', '灾难性', '罕见')">8</div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '4', '灾难性', '极少')">4</div>
+                        </div>
+
+                        <!-- Row 2: Major -->
+                        <div class="grid grid-cols-5 gap-2 mb-2 h-16">
+                            <div class="flex items-center justify-end pr-4 font-bold text-slate-700 text-sm">重大<br><span class="text-xs font-normal text-slate-500 ml-2">机能丧失/延误</span></div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '12', '重大', '频繁')">12</div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '9', '重大', '偶尔')">9</div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '6', '重大', '罕见')">6</div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '3', '重大', '极少')">3</div>
+                        </div>
+
+                        <!-- Row 3: Moderate -->
+                        <div class="grid grid-cols-5 gap-2 mb-2 h-16">
+                            <div class="flex items-center justify-end pr-4 font-bold text-slate-700 text-sm">中等<br><span class="text-xs font-normal text-slate-500 ml-2">住院时间延长</span></div>
+                            <div class="matrix-cell rounded-lg bg-red-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('red', '8', '中等', '频繁')">8</div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '6', '中等', '偶尔')">6</div>
+                            <div class="matrix-cell rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('green', '4', '中等', '罕见')">4</div>
+                            <div class="matrix-cell rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('green', '2', '中等', '极少')">2</div>
+                        </div>
+
+                        <!-- Row 4: Minor -->
+                        <div class="grid grid-cols-5 gap-2 h-16">
+                            <div class="flex items-center justify-end pr-4 font-bold text-slate-700 text-sm">轻微<br><span class="text-xs font-normal text-slate-500 ml-2">无需过度处理</span></div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '4', '轻微', '频繁')">4</div>
+                            <div class="matrix-cell rounded-lg bg-amber-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('yellow', '3', '轻微', '偶尔')">3</div>
+                            <div class="matrix-cell rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('green', '2', '轻微', '罕见')">2</div>
+                            <div class="matrix-cell rounded-lg bg-green-500 flex items-center justify-center text-white font-bold text-xl" onclick="showMatrixInfo('green', '1', '轻微', '极少')">1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Panel -->
+                <div class="w-full lg:w-2/5">
+                    <div id="matrix-info-panel" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col justify-center min-h-[300px]">
+                        <div class="text-center text-slate-400">
+                            <div class="text-5xl mb-4">&#128433;</div>
+                            <p>点击左侧矩阵中的任意数字卡片，<br>查看HFMEA决策指示。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: HFMEA Case Study -->
+        <section id="hfmea-case" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800 border-l-4 border-health-600 pl-4">第四部分：HFMEA 临床实战案例</h2>
+                <p class="mt-4 text-slate-600 leading-relaxed">
+                    在确定高危风险后，HFMEA不仅要求评分，更要求利用<strong>决策树 (Decision Tree)</strong> 来决定干预措施，并重新设计流程。以下是一个经典的<strong>静脉输液给药流程</strong>HFMEA分析案例。
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 text-center border-b pb-4">主流程：静脉药物配置与给药</h3>
+                
+                <div class="space-y-4">
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <button class="w-full text-left px-6 py-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center focus:outline-none" onclick="toggleProcess('step1')">
+                            <span>步骤 1：医生开具处方 (CPOE)</span>
+                            <span id="icon-step1" class="text-slate-400 transform transition-transform">&#9660;</span>
+                        </button>
+                        <div id="content-step1" class="px-6 py-4 bg-white border-t border-slate-100 hidden">
+                            <div class="mb-2"><strong class="text-red-500">潜在失效模式：</strong> 医生选择了错误的药物剂量单位（如将mg错选为mcg）。</div>
+                            <div class="mb-2"><strong class="text-slate-700">危害评分：</strong> 严重度=灾难性，频度=偶尔 &rarr; <strong class="text-red-600">得分：12 (高风险)</strong></div>
+                            <div class="bg-health-50 p-3 rounded mt-3 border border-health-100">
+                                <strong class="text-health-700">改进措施 (强控制)：</strong> 在电子病历系统中设置硬性拦截（Hard Stop）。当高危药物剂量超过绝对安全阈值时，系统禁止提交，并要求药师介入。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <button class="w-full text-left px-6 py-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center focus:outline-none" onclick="toggleProcess('step2')">
+                            <span>步骤 2：药房静脉配置中心 (PIVAS) 调配</span>
+                            <span id="icon-step2" class="text-slate-400 transform transition-transform">&#9660;</span>
+                        </button>
+                        <div id="content-step2" class="px-6 py-4 bg-white border-t border-slate-100 hidden">
+                            <div class="mb-2"><strong class="text-red-500">潜在失效模式：</strong> 药师抽取的药液量错误，或溶媒选择错误。</div>
+                            <div class="mb-2"><strong class="text-slate-700">危害评分：</strong> 严重度=重大，频度=偶尔 &rarr; <strong class="text-red-600">得分：9 (高风险)</strong></div>
+                            <div class="bg-health-50 p-3 rounded mt-3 border border-health-100">
+                                <strong class="text-health-700">改进措施 (技术控制)：</strong> 引入重力传感智能调配台。调配前扫描条码确认药物，调配后系统称重。若重量误差超过设定值，无法打印最终条码标签。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <button class="w-full text-left px-6 py-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center focus:outline-none" onclick="toggleProcess('step3')">
+                            <span>步骤 3：护士病房床旁给药</span>
+                            <span id="icon-step3" class="text-slate-400 transform transition-transform">&#9660;</span>
+                        </button>
+                        <div id="content-step3" class="px-6 py-4 bg-white border-t border-slate-100 hidden">
+                            <div class="mb-2"><strong class="text-red-500">潜在失效模式：</strong> 将药物挂错给同病房的另一位患者。</div>
+                            <div class="mb-2"><strong class="text-slate-700">危害评分：</strong> 严重度=灾难性，频度=偶尔 &rarr; <strong class="text-red-600">得分：12 (高风险)</strong></div>
+                            <div class="bg-health-50 p-3 rounded mt-3 border border-health-100">
+                                <strong class="text-health-700">改进措施 (系统控制)：</strong> 强制实施闭环用药管理 (BCMA)。护士必须通过PDA扫描患者腕带二维码和输液袋条码，系统核对一致后才允许输液。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Summary Table -->
+        <section class="mb-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">FMEA 与 HFMEA 的核心差异总结</h2>
+            <div class="overflow-x-auto bg-white rounded-2xl shadow-sm border border-slate-200">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-4 border-b-2 border-slate-200 bg-slate-50 font-bold text-slate-600">对比维度</th>
+                            <th class="p-4 border-b-2 border-slate-200 bg-brand-50 font-bold text-brand-800">传统 FMEA (工业)</th>
+                            <th class="p-4 border-b-2 border-slate-200 bg-health-50 font-bold text-health-800">HFMEA (医疗保健)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr>
+                            <td class="p-4 border-b border-slate-100 font-semibold text-slate-700">源起行业</td>
+                            <td class="p-4 border-b border-slate-100">军事、航空航天、汽车制造</td>
+                            <td class="p-4 border-b border-slate-100">退伍军人事务部 (VA)、医院</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-slate-100 font-semibold text-slate-700">风险量化工具</td>
+                            <td class="p-4 border-b border-slate-100"><strong class="text-brand-600">RPN</strong> (风险优先数 1-1000)</td>
+                            <td class="p-4 border-b border-slate-100"><strong class="text-health-600">Hazard Score</strong> (危害评分矩阵 1-16)</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-slate-100 font-semibold text-slate-700">评估因子</td>
+                            <td class="p-4 border-b border-slate-100">严重度(S) &times; 频度(O) &times; <strong class="text-red-500">探测度(D)</strong></td>
+                            <td class="p-4 border-b border-slate-100">仅评估 严重度(S) 与 频度(O)</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-slate-100 font-semibold text-slate-700">放弃探测度的原因</td>
+                            <td class="p-4 border-b border-slate-100">不适用。工业有机器检测线。</td>
+                            <td class="p-4 border-b border-slate-100">临床中依赖"人"去发现错误极不可靠，且往往在伤害发生后才被发现。</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-slate-100 font-semibold text-slate-700">后续决策工具</td>
+                            <td class="p-4 border-b border-slate-100">基于RPN阈值排序整改</td>
+                            <td class="p-4 border-b border-slate-100">强制引入 <strong class="text-health-600">决策树分析</strong> 判断是否需要控制</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm">
+        <p>基于系统工程学与患者安全数据的交互式研究报告</p>
+        <p class="mt-2">&copy; 2023-2024 Risk Management Architecture</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 1. Timeline Logic ---
+        function updateTimeline(year) {
+            // Reset all
+            document.querySelectorAll('.timeline-item').forEach(el => {
+                el.classList.remove('active', 'border-brand-600', 'bg-brand-50');
+                el.classList.add('border-transparent');
+            });
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            
+            // Set active
+            const activeNav = document.getElementById('timeline-' + year);
+            activeNav.classList.add('active', 'border-brand-600');
+            activeNav.classList.remove('border-transparent');
+            
+            const activeContent = document.getElementById('content-' + year);
+            activeContent.classList.remove('hidden');
+            activeContent.classList.add('block', 'animate-fade-in');
+        }
+
+        // --- 2. Chart.js Implementation (Traditional FMEA RPN) ---
+        const ctx = document.getElementById('rpnChart').getContext('2d');
+        const rpnChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['发动机漏油', '传感器轻微偏移', '阀门密封圈沙眼', '指示灯不亮'],
+                datasets: [
+                    {
+                        label: '严重度 (S)',
+                        data: [10, 4, 9, 2],
+                        backgroundColor: '#ef4444', // red-500
+                    },
+                    {
+                        label: '频度 (O)',
+                        data: [3, 8, 2, 5],
+                        backgroundColor: '#f59e0b', // amber-500
+                    },
+                    {
+                        label: '探测度 (D)',
+                        data: [2, 7, 3, 2],
+                        backgroundColor: '#3b82f6', // blue-500
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // CRITICAL: Allows chart to fit container height
+                scales: {
+                    x: {
+                        stacked: false,
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: { display: true, text: '单项评分 (1-10)' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                // Calculate RPN on tooltip hover
+                                let index = context[0].dataIndex;
+                                let s = rpnChart.data.datasets[0].data[index];
+                                let o = rpnChart.data.datasets[1].data[index];
+                                let d = rpnChart.data.datasets[2].data[index];
+                                let rpn = s * o * d;
+                                return '\n最终 RPN: ' + rpn;
+                            }
+                        }
+                    },
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // --- 3. Hazard Matrix Logic (HFMEA) ---
+        function showMatrixInfo(color, score, severity, frequency) {
+            const panel = document.getElementById('matrix-info-panel');
+            let content = '';
+            
+            if (color === 'red') {
+                content = `
+                    <div class="animate-fade-in flex flex-col items-center justify-center text-center h-full">
+                        <div class="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl font-bold mb-4 border border-red-200">
+                            ${score}
+                        </div>
+                        <h4 class="text-xl font-bold text-red-600 mb-2">高风险 (High Risk)</h4>
+                        <p class="text-slate-600 mb-4 text-sm">严重度：<strong>${severity}</strong> | 频度：<strong>${frequency}</strong></p>
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 text-left w-full">
+                            <strong class="text-slate-800">VA NCPS 行动指令：</strong>
+                            <p class="mt-2 text-sm text-slate-700">得分为8及以上的项目，<strong class="text-red-600">必须强制进入HFMEA决策树分析步骤</strong>。团队需要立即评估该流程节点是否缺乏有效的控制措施，并着手重新设计流程。</p>
+                        </div>
+                    </div>
+                `;
+            } else if (color === 'yellow') {
+                content = `
+                    <div class="animate-fade-in flex flex-col items-center justify-center text-center h-full">
+                        <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold mb-4 border border-amber-200">
+                            ${score}
+                        </div>
+                        <h4 class="text-xl font-bold text-amber-600 mb-2">中等风险 (Moderate Risk)</h4>
+                        <p class="text-slate-600 mb-4 text-sm">严重度：<strong>${severity}</strong> | 频度：<strong>${frequency}</strong></p>
+                        <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-left w-full">
+                            <strong class="text-slate-800">VA NCPS 行动指令：</strong>
+                            <p class="mt-2 text-sm text-slate-700">建议进入决策树分析。由医疗管理层决定是否需要分配资源进行流程改进，或依靠现有的培训和规范进行风险控制。</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div class="animate-fade-in flex flex-col items-center justify-center text-center h-full">
+                        <div class="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl font-bold mb-4 border border-green-200">
+                            ${score}
+                        </div>
+                        <h4 class="text-xl font-bold text-green-600 mb-2">低风险 (Low Risk)</h4>
+                        <p class="text-slate-600 mb-4 text-sm">严重度：<strong>${severity}</strong> | 频度：<strong>${frequency}</strong></p>
+                        <div class="bg-green-50 border-l-4 border-green-500 p-4 text-left w-full">
+                            <strong class="text-slate-800">VA NCPS 行动指令：</strong>
+                            <p class="mt-2 text-sm text-slate-700">得分为1-4的普通项目通常<strong class="text-green-700">无需进行后续流程分析</strong>。除非有特殊的法规强制要求或管理层特别关注。</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            panel.innerHTML = content;
+        }
+
+        // --- 4. Process Flow Accordion ---
+        function toggleProcess(stepId) {
+            const content = document.getElementById('content-' + stepId);
+            const icon = document.getElementById('icon-' + stepId);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Add simple fade-in animation to tailwind config dynamically via style tag for JS generated content
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.4s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

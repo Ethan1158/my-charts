@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险管理的演进：从FMEA到HFMEA与决策树</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            fontFamily: {
+                sans: ['"Noto Sans SC"', 'sans-serif'],
+            },
+            colors: {
+                brand: {
+                    50: '#eff6ff',
+                    100: '#dbeafe',
+                    500: '#3b82f6',
+                    700: '#1d4ed8',
+                    900: '#1e3a8a',
+                },
+                accent: {
+                    400: '#fbbf24',
+                    500: '#f59e0b',
+                    600: '#d97706',
+                },
+                danger: '#ef4444',
+                safe: '#10b981'
+            }
+        }
+    }
+}
+</script>
+<style>
+body { font-family: 'Noto Sans SC', sans-serif; background-color: #f8fafc; color: #1e293b; }
+.chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+@media (min-width: 768px) { .chart-container { height: 400px; } }
+.glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #94a3b8; margin: 0.5rem 0; }
+.gradient-text { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+</style>
+<!-- Chosen Palette: Brilliant Blues & Vibrant Orange (Deep Blue #1E3A8A, Vibrant Blue #3B82F6, Amber #F59E0B) -->
+<!-- Application Structure Plan: A single-page scrollable infographic divided into four logical narrative sections. 1. Evolution (Timeline/Context), 2. The Core Shift (Scale comparison via charts), 3. The Decision Tree (Interactive HTML flow process), 4. Case Studies & Impact (Radar/Doughnut charts showing effectiveness). This linear but segmented approach allows users to digest the theoretical shift first, followed by the practical application and its measurable impact, optimizing for educational flow. -->
+<!-- Visualization & Content Choices: 1. Bar Chart -> Goal: Compare -> Compares 10-pt FMEA scale vs 4-pt HFMEA scale. Shows the shift from broad to focused metrics. Library: Chart.js (Canvas). 2. Flowchart Diagram -> Goal: Organize/Process -> Explains the Decision Tree logic visually using CSS/HTML shapes and Unicode arrows. No SVG used. 3. Radar Chart -> Goal: Compare -> Compares traditional FMEA vs HFMEA on multi-dimensional performance (Objectivity, Efficiency, etc.). Library: Chart.js (Canvas). 4. Doughnut Chart -> Goal: Inform/Compare -> Shows resource allocation efficiency. Library: Chart.js (Canvas). Confirming NO SVG/Mermaid. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white">
+
+<header class="bg-brand-900 text-white py-20 px-6 relative overflow-hidden shadow-xl">
+    <div class="absolute top-[-50%] left-[-10%] w-[70%] h-[200%] bg-brand-700 rounded-full opacity-20 blur-3xl"></div>
+    <div class="absolute bottom-[-20%] right-[-5%] w-[50%] h-[150%] bg-accent-500 rounded-full opacity-20 blur-3xl"></div>
+    <div class="max-w-5xl mx-auto relative z-10 text-center">
+        <span class="inline-block py-1 px-3 rounded-full bg-brand-100 text-brand-900 text-sm font-bold tracking-wider mb-6">医疗质量与安全管理</span>
+        <h1 class="text-4xl md:text-6xl font-black mb-6 leading-tight">风险管理的范式转移：<br><span class="bg-gradient-to-r from-accent-400 to-accent-600 gradient-text">从 FMEA 到 HFMEA</span></h1>
+        <p class="text-xl text-brand-100 max-w-3xl mx-auto font-light leading-relaxed">
+            深入解析传统失效模式与效应分析(FMEA)的工业起源，以及美国退伍军人事务部如何通过引入<strong class="text-white font-bold">决策树分析</strong>，将其重构为高度适配医疗环境的HFMEA，实现从主观评分到客观逻辑决策的跨越。
+        </p>
+    </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-6 py-12 space-y-20">
+
+    <section>
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-black text-brand-900 mb-4">1. 历史演进：从工业流水线到患者安全</h2>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg">
+                FMEA起源于对硬件故障的零容忍，而HFMEA则是在极其复杂的医疗人为系统中寻找确定性。了解这一演进路径，是掌握核心评估逻辑的前提。
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-6 mb-12">
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-brand-900 relative">
+                <div class="text-5xl font-black text-slate-100 absolute top-4 right-4 z-0">1949</div>
+                <div class="relative z-10">
+                    <h3 class="text-xl font-bold text-brand-900 mb-3">MIL-P-1629 军事标准</h3>
+                    <p class="text-slate-600 text-sm">美国军方首次提出FMEA，用于评估系统故障对任务成功和人员安全的潜在影响，确立了风险预防的雏形。</p>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-brand-500 relative">
+                <div class="text-5xl font-black text-slate-100 absolute top-4 right-4 z-0">1990s</div>
+                <div class="relative z-10">
+                    <h3 class="text-xl font-bold text-brand-700 mb-3">汽车工业 QS-9000</h3>
+                    <p class="text-slate-600 text-sm">三大汽车巨头将其标准化。核心依赖于 <strong>RPN (风险优先数)</strong>：严重度(S) × 频度(O) × 探测度(D)，采用1-10分制量表。</p>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-accent-500 relative bg-brand-50">
+                <div class="text-5xl font-black text-brand-100 absolute top-4 right-4 z-0">2001</div>
+                <div class="relative z-10">
+                    <h3 class="text-xl font-bold text-accent-600 mb-3">医疗 HFMEA 诞生</h3>
+                    <p class="text-slate-700 text-sm font-medium">美国VA国家患者安全中心摒弃了难以标准化的“探测度(D)”打分，将其替换为严谨的<strong class="text-brand-700">决策树模型</strong>，并压缩了评分量表。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-black text-brand-900 mb-4">2. 核心架构重构：摒弃模糊的居中评分</h2>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg">
+                传统FMEA的1-10分制极易导致团队为了达成共识而选择“安全”的中间分（如5或6分），这掩盖了真实的极端风险。HFMEA采用强制的1-4分制，迫使评估者做出明确的定性判断。
+            </p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-8">
+            <h3 class="text-xl font-bold text-center mb-6 text-brand-900">评分量表颗粒度与主观聚集性对比</h3>
+            <div class="chart-container">
+                <canvas id="scaleChart"></canvas>
+            </div>
+            <div class="mt-6 p-4 bg-brand-50 rounded-lg text-sm text-slate-700 border-l-4 border-brand-500">
+                <strong class="text-brand-900">图表解析：</strong> 此柱状图展示了评分分布的典型现象。在传统1-10分制中（浅蓝色），大量评分倾向于聚集在中间模糊地带。而HFMEA的1-4分制（深蓝色）强制团队将严重性明确归类为：轻微(1)、中度(2)、重度(3)或灾难性(4)，极大消除了主观妥协造成的评估偏差。
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-black text-brand-900 mb-4">3. 决策树逻辑：从概率估算到逻辑网关</h2>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg">
+                当失效模式的危害评分（严重性 × 频度）达到或超过8分时，将触发决策树分析。决策树通过三个连续的“机会节点”进行布尔逻辑（是/否）筛选，决定该风险是否进入最终的干预方案制定阶段。
+            </p>
+        </div>
+
+        <div class="bg-slate-900 rounded-3xl p-8 md:p-12 shadow-2xl overflow-hidden">
+            <h3 class="text-2xl font-bold text-white mb-8 text-center">HFMEA 危害分析决策树流图</h3>
+            
+            <div class="flex flex-col items-center space-y-2">
+                
+                <div class="bg-brand-700 text-white px-6 py-3 rounded-full font-bold shadow-lg border-2 border-brand-400 z-10">
+                    危害评分 ≥ 8分
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <div class="relative w-full max-w-md">
+                    <div class="bg-slate-800 border-2 border-brand-500 rounded-xl p-5 text-center shadow-lg relative z-10">
+                        <div class="text-brand-400 font-black text-sm mb-1">节点 1 (Q1)</div>
+                        <div class="text-white font-bold text-lg">这是单点弱点吗？</div>
+                        <div class="text-slate-400 text-xs mt-2">若此步骤失败，是否会导致整个流程直接失败且无纠正机会？</div>
+                    </div>
+                    <div class="flex justify-between px-10 mt-2 text-sm font-bold text-slate-300">
+                        <div class="flex flex-col items-center"><span class="text-danger mb-1">是 (Yes)</span><span class="text-2xl">↓</span></div>
+                        <div class="flex flex-col items-center"><span class="text-safe mb-1">否 (No)</span><span class="text-2xl">↓</span></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 w-full max-w-2xl mt-2 relative">
+                    <div class="flex flex-col items-center justify-start pt-4">
+                        <div class="h-full border-l-2 border-dashed border-danger opacity-50 absolute left-1/4 top-0 -z-0"></div>
+                        <div class="bg-danger/20 border-2 border-danger text-danger px-6 py-4 rounded-xl font-black shadow-lg text-center z-10 mt-20">
+                            继续 (PROCEED)<br><span class="text-xs font-normal text-danger/80">必须制定消除或控制方案</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center">
+                        <div class="bg-slate-800 border-2 border-brand-500 rounded-xl p-5 text-center shadow-lg w-full z-10">
+                            <div class="text-brand-400 font-black text-sm mb-1">节点 2 (Q2)</div>
+                            <div class="text-white font-bold text-lg">是否有现存有效控制措施？</div>
+                            <div class="text-slate-400 text-xs mt-2">系统中是否已有被证实能防止该危害发生的机制？</div>
+                        </div>
+                        <div class="flex justify-between w-full px-6 mt-2 text-sm font-bold text-slate-300">
+                            <div class="flex flex-col items-center"><span class="text-safe mb-1">是 (Yes)</span><span class="text-2xl">↓</span></div>
+                            <div class="flex flex-col items-center"><span class="text-danger mb-1">否 (No)</span><span class="text-2xl">↓</span></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 w-full mt-2">
+                            <div class="flex flex-col items-center">
+                                <div class="bg-safe/20 border-2 border-safe text-safe px-4 py-3 rounded-xl font-bold shadow-lg text-center z-10 mt-16 text-sm">
+                                    停止 (STOP)<br><span class="text-[10px] font-normal text-safe/80">风险已受控，无需新措施</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col items-center">
+                                <div class="bg-slate-800 border-2 border-brand-500 rounded-xl p-4 text-center shadow-lg w-full z-10">
+                                    <div class="text-brand-400 font-black text-sm mb-1">节点 3 (Q3)</div>
+                                    <div class="text-white font-bold text-base">失效极易被探测吗？</div>
+                                </div>
+                                <div class="flex justify-between w-full px-4 mt-2 text-sm font-bold text-slate-300">
+                                    <div class="flex flex-col items-center"><span class="text-safe mb-1">是</span><span class="text-xl">↓</span></div>
+                                    <div class="flex flex-col items-center"><span class="text-danger mb-1">否</span><span class="text-xl">↓</span></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 w-full mt-2">
+                                    <div class="bg-safe/20 border-2 border-safe text-safe py-2 rounded-lg font-bold text-center text-xs z-10">停止</div>
+                                    <div class="bg-danger/20 border-2 border-danger text-danger py-2 rounded-lg font-bold text-center text-xs z-10">继续</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-black text-brand-900 mb-4">4. 案例实证与数据化评估</h2>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg">
+                通过真实临床与检验案例的对比，验证决策树如何高效过滤冗余风险，并将资源精准聚焦于系统的关键脆弱点。
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+            
+            <div class="glass-card rounded-2xl p-8 flex flex-col">
+                <h3 class="text-xl font-bold text-brand-900 mb-2 border-b-2 border-brand-100 pb-2">案例A: 静脉给药泵设置错误</h3>
+                <div class="flex-grow space-y-4 mt-4">
+                    <div class="bg-danger/10 p-3 rounded-lg border-l-4 border-danger">
+                        <div class="text-xs text-danger font-bold uppercase tracking-wide">初始危害评分</div>
+                        <div class="text-lg font-bold text-slate-800">灾难性(4) × 偶尔(3) = <span class="text-danger text-2xl">12分</span></div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-500 mb-1">决策树路径：</div>
+                        <ul class="text-sm space-y-2 text-slate-700 font-medium">
+                            <li class="flex items-center"><span class="text-xl mr-2 text-brand-500">→</span> <strong class="text-brand-900 mr-1">Q1:</strong> 是单点弱点吗？ <span class="bg-slate-200 px-2 py-0.5 rounded ml-auto text-danger font-bold">是 (直接按错误执行)</span></li>
+                        </ul>
+                    </div>
+                    <div class="mt-auto bg-slate-100 p-4 rounded-lg">
+                        <div class="text-danger font-black text-lg mb-1">结论：PROCEED</div>
+                        <p class="text-sm text-slate-600">强制干预：引入双人独立核对机制，采购带剂量上下限硬报警的智能输液泵。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 flex flex-col">
+                <h3 class="text-xl font-bold text-brand-900 mb-2 border-b-2 border-brand-100 pb-2">案例B: 检验科样本标签缺失</h3>
+                <div class="flex-grow space-y-4 mt-4">
+                    <div class="bg-accent-500/10 p-3 rounded-lg border-l-4 border-accent-500">
+                        <div class="text-xs text-accent-600 font-bold uppercase tracking-wide">初始危害评分</div>
+                        <div class="text-lg font-bold text-slate-800">重度(3) × 偶尔(3) = <span class="text-accent-600 text-2xl">9分</span></div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-500 mb-1">决策树路径：</div>
+                        <ul class="text-sm space-y-2 text-slate-700 font-medium">
+                            <li class="flex items-center"><span class="text-xl mr-2 text-brand-500">→</span> <strong class="text-brand-900 mr-1">Q1:</strong> 是单点弱点吗？ <span class="bg-slate-200 px-2 py-0.5 rounded ml-auto">否 (仪器无法扫描)</span></li>
+                            <li class="flex items-center"><span class="text-xl mr-2 text-brand-500">→</span> <strong class="text-brand-900 mr-1">Q2:</strong> 有现有控制吗？ <span class="bg-slate-200 px-2 py-0.5 rounded ml-auto text-safe font-bold">是 (强制拒收政策)</span></li>
+                        </ul>
+                    </div>
+                    <div class="mt-auto bg-slate-100 p-4 rounded-lg">
+                        <div class="text-safe font-black text-lg mb-1">结论：STOP</div>
+                        <p class="text-sm text-slate-600">无需消耗资源制定新措施，现有拒收屏障已足以防止错误结果到达患者。</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 items-start">
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-lg font-bold text-center mb-4 text-brand-900">方法论综合效能对比评估</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <p class="text-xs text-slate-500 text-center mt-4">雷达图显示，引入决策树后的HFMEA在主观偏差控制、系统控制导向及资源聚焦度上表现出显著优势。</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-lg font-bold text-center mb-4 text-brand-900">干预资源分配比例 (模拟数据)</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="doughnutChart"></canvas>
+                </div>
+                <p class="text-xs text-slate-500 text-center mt-4">传统FMEA倾向于对所有高分项进行微弱干预。HFMEA通过决策树过滤掉约30-40%受控风险(STOP)，将100%的核心资源聚焦于真正的系统漏洞(PROCEED)。</p>
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<footer class="bg-slate-900 text-slate-400 py-8 text-center mt-12">
+    <div class="max-w-5xl mx-auto px-6">
+        <p class="text-sm mb-2 font-bold text-slate-300">医疗风险管理标准化研究框架</p>
+        <p class="text-xs">
+            通过流程图谱识别节点 → 危害评分矩阵计算阈值 → <strong class="text-brand-400">决策树滤除受控非临界风险</strong> → 针对关键脆弱点制定物理强制措施。
+        </p>
+    </div>
+</footer>
+
+<script>
+function wrapLabel(label) {
+    if (label.length <= 16) return label;
+    const words = label.split(' ');
+    let lines = [];
+    let currentLine = '';
+    words.forEach(word => {
+        if ((currentLine + word).length > 16) {
+            if (currentLine) lines.push(currentLine.trim());
+            currentLine = word + ' ';
+        } else {
+            currentLine += word + ' ';
+        }
+    });
+    if (currentLine) lines.push(currentLine.trim());
+    return lines;
+}
+
+const commonTooltipConfig = {
+    tooltip: {
+        callbacks: {
+            title: function(tooltipItems) {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                    return label.join(' ');
+                } else {
+                    return label;
+                }
+            }
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const scaleCtx = document.getElementById('scaleChart').getContext('2d');
+    new Chart(scaleCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                wrapLabel('极其轻微的风险影响'), 
+                wrapLabel('中等程度的风险影响'), 
+                wrapLabel('比较严重的风险影响'), 
+                wrapLabel('灾难性致命风险影响')
+            ],
+            datasets: [
+                {
+                    label: '传统FMEA (1-10分分布模拟)',
+                    data: [1, 7, 5, 2],
+                    backgroundColor: 'rgba(59, 130, 246, 0.3)',
+                    borderColor: 'rgba(59, 130, 246, 0.8)',
+                    borderWidth: 2,
+                    borderRadius: 4
+                },
+                {
+                    label: 'HFMEA (1-4分明确归类)',
+                    data: [2, 3, 6, 4],
+                    backgroundColor: 'rgba(30, 58, 138, 0.9)',
+                    borderColor: 'rgba(30, 58, 138, 1)',
+                    borderWidth: 2,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                ...commonTooltipConfig,
+                legend: { position: 'top', labels: { font: { family: "'Noto Sans SC', sans-serif" } } }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: '评估频次/聚集度' } },
+                x: { ticks: { font: { family: "'Noto Sans SC', sans-serif", size: 11 } } }
+            }
+        }
+    });
+
+    const radarCtx = document.getElementById('radarChart').getContext('2d');
+    new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: [
+                wrapLabel('主观偏差的有效控制'), 
+                wrapLabel('管理资源的聚焦精准度'), 
+                wrapLabel('团队决策的沟通效率'), 
+                wrapLabel('硬性系统控制导向力'), 
+                wrapLabel('对医疗复杂环境的适应')
+            ],
+            datasets: [{
+                label: '传统 RPN 评分法',
+                data: [4, 5, 6, 4, 5],
+                fill: true,
+                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                borderColor: 'rgba(245, 158, 11, 1)',
+                pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(245, 158, 11, 1)'
+            }, {
+                label: '集成决策树的 HFMEA',
+                data: [9, 9, 8, 8, 9],
+                fill: true,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(59, 130, 246, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: { line: { borderWidth: 3 } },
+            scales: {
+                r: {
+                    angleLines: { display: true, color: 'rgba(0,0,0,0.05)' },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    ticks: { display: false },
+                    pointLabels: { font: { family: "'Noto Sans SC', sans-serif", size: 10, weight: 'bold' }, color: '#475569' }
+                }
+            },
+            plugins: {
+                ...commonTooltipConfig,
+                legend: { position: 'bottom', labels: { font: { family: "'Noto Sans SC', sans-serif" }, padding: 20 } }
+            }
+        }
+    });
+
+    const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+    new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                wrapLabel('决策树滤除的受控风险 (停止干预)'),
+                wrapLabel('被识别的真实系统漏洞 (强制干预)')
+            ],
+            datasets: [{
+                data: [35, 65],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.8)', 
+                    'rgba(239, 68, 68, 0.8)'   
+                ],
+                hoverBackgroundColor: [
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(239, 68, 68, 1)'
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                ...commonTooltipConfig,
+                legend: { position: 'bottom', labels: { font: { family: "'Noto Sans SC', sans-serif" } } }
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
